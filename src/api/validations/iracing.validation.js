@@ -10,4 +10,11 @@ module.exports = {
       season: Joi.number().min(1).max(10),
     },
   },
+  getSubsessionData: {
+    body: {
+      type: Joi.string(),
+      year: Joi.number(),
+      season: Joi.number().min(1).max(10),
+    },
+  },
 };

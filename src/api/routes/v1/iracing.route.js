@@ -45,4 +45,21 @@ router
    */
   .get(authorize(LOGGED_USER_IRACING), validate(getSessionData), controller.getSessionData);
 
+router
+  .route('/subsession/:custid/:id')
+  /**
+   * @api {get} v1/iracing/subsession Get iRacing detailed subsession data
+   * @apiDescription Get iracing subsession data
+   * @apiVersion 1.0.0
+   * @apiName GetIRacingData for specific subsession
+   * @apiGroup Iracing
+   * @apiPermission user
+   *
+   * @apiHeader {String} Authorization   User's access token
+   *
+   * @apiSuccess {Object[]} data
+   *
+   * @apiError (Unauthorized 401)  Unauthorized  Only authenticated users can access the data
+   */
+  .get(authorize(LOGGED_USER_IRACING), controller.getSubsessionData);
 module.exports = router;

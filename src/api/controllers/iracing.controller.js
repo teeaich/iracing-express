@@ -27,3 +27,16 @@ exports.getSessionData = async (req, res, next) => {
     next(error);
   }
 };
+/**
+ * Get iracing subsession data
+ * @public
+ */
+exports.getSubsessionData = async (req, res, next) => {
+  try {
+    const { data } = await iracingScrapeProviders.getSubsessionData(req.cookie, req.params);
+    res.json(data);
+  } catch (error) {
+    next(error);
+  }
+};
+

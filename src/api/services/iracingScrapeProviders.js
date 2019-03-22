@@ -86,6 +86,21 @@ exports.getSessionData = async (cookies, {
   return data;
 };
 
+exports.getSubsessionData = async (cookies, {
+  custid,
+  id,
+}) => {
+  const headers = {
+    Cookie: createCookieString(cookies),
+    'Content-Type': 'application/x-www-form-urlencoded',
+  };
+  const url = 'http://members.iracing.com/membersite/member/GetSubsessionResults';
+  const data = await axios.post(url, `subsessionID=${id}&custid=${custid}`, { headers });
+  console.log(url);
+  console.log(headers);
+  console.log(`subsessionID=${id}&custid=${custid}`);
+  return data;
+};
 
 exports.validateSession = async (cookies) => {
   const browser = await puppeteer.launch({
