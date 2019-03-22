@@ -24,6 +24,7 @@ describe('Authentication API', () => {
   let user;
   let refreshToken;
   let expiredRefreshToken;
+  let iracingUser;
 
   beforeEach(async () => {
     dbUser = {
@@ -51,6 +52,11 @@ describe('Authentication API', () => {
       userId: '5947397b323ae82d8c3a333b',
       userEmail: dbUser.email,
       expires: moment().subtract(1, 'day').toDate(),
+    };
+
+    iracingUser = {
+      email: 'thorsten.habig@gmail.com',
+      password: 'Betzepower',
     };
 
     await User.remove({});
@@ -334,6 +340,67 @@ describe('Authentication API', () => {
         .then((res) => {
           expect(res.body.code).to.be.equal(401);
           expect(res.body.message).to.be.equal('Invalid refresh token.');
+        });
+    });
+  });
+
+  describe('POST /v1/auth/ext-login', () => {
+    it('should return an accessToken and a refreshToken when email and password matches on iracing', () => {
+      return request(app)
+        .post('/v1/auth/ext-login')
+        .send(iracingUser)
+        .expect(httpStatus.OK)
+        .then((res) => {
+          delete iracingUser.password;
+          expect(res.body.token).to.have.a.property('accessToken');
+          expect(res.body.token).to.have.a.property('refreshToken');
+          expect(res.body.token).to.have.a.property('expiresIn');
+          expect(res.body.user).to.include(iracingUser);
+        });
+    });
+
+    it('should report error when email and password are not provided', () => {
+      return request(app)
+        .post('/v1/auth/ext-login')
+        .send({})
+        .expect(httpStatus.BAD_REQUEST)
+        .then((res) => {
+          const { field } = res.body.errors[0];
+          const { location } = res.body.errors[0];
+          const { messages } = res.body.errors[0];
+          expect(field).to.be.equal('email');
+          expect(location).to.be.equal('body');
+          expect(messages).to.include('"email" is required');
+        });
+    });
+
+    it('should report error when the email provided is not valid', () => {
+      user.email = 'this_is_not_an_email';
+      return request(app)
+        .post('/v1/auth/ext-login')
+        .send(user)
+        .expect(httpStatus.BAD_REQUEST)
+        .then((res) => {
+          const { field } = res.body.errors[0];
+          const { location } = res.body.errors[0];
+          const { messages } = res.body.errors[0];
+          expect(field).to.be.equal('email');
+          expect(location).to.be.equal('body');
+          expect(messages).to.include('"email" must be a valid email');
+        });
+    });
+
+    it('should report error when email and password don\'t match on iracing', () => {
+      iracingUser.password = 'xxx';
+      return request(app)
+        .post('/v1/auth/ext-login')
+        .send(iracingUser)
+        .expect(httpStatus.UNAUTHORIZED)
+        .then((res) => {
+          const { code } = res.body;
+          const { message } = res.body;
+          expect(code).to.be.equal(401);
+          expect(message).to.be.equal('User does not exist on iracing');
         });
     });
   });

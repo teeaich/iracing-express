@@ -27,15 +27,21 @@ async function format(user) {
   return omitBy(dbUser, isNil);
 }
 
-describe('Users API', async () => {
+describe('Users API', () => {
   let adminAccessToken;
   let userAccessToken;
   let dbUsers;
   let user;
   let admin;
+  let passwordHashed;
 
   const password = '123456';
-  const passwordHashed = await bcrypt.hash(password, 1);
+
+
+  before(async () => {
+    passwordHashed = await bcrypt.hash(password, 1);
+  });
+
 
   beforeEach(async () => {
     dbUsers = {

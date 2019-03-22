@@ -13,7 +13,7 @@ const jwtOptions = {
 const jwt = async (payload, done) => {
   try {
     const user = await User.findById(payload.sub);
-    if (user) return done(null, user);
+    if (user) return done(null, user, payload.cookie || null);
     return done(null, false);
   } catch (error) {
     return done(error, false);

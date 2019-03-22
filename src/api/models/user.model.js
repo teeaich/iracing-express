@@ -7,6 +7,7 @@ const jwt = require('jwt-simple');
 const uuidv4 = require('uuid/v4');
 const APIError = require('../utils/APIError');
 const { env, jwtSecret, jwtExpirationInterval } = require('../../config/vars');
+const iracingScrapeProviders = require('../services/iracingScrapeProviders');
 
 /**
 * User Roles
@@ -38,6 +39,7 @@ const userSchema = new mongoose.Schema({
     index: true,
     trim: true,
   },
+  cookies: mongoose.Schema.Types.Mixed,
   services: {
     facebook: String,
     google: String,
@@ -91,13 +93,14 @@ userSchema.method({
     return transformed;
   },
 
-  token() {
-    const playload = {
+  token(cookie) {
+    const payload = {
       exp: moment().add(jwtExpirationInterval, 'minutes').unix(),
       iat: moment().unix(),
       sub: this._id,
     };
-    return jwt.encode(playload, jwtSecret);
+    if (cookie) payload.cookie = cookie;
+    return jwt.encode(payload, jwtSecret);
   },
 
   async passwordMatches(password) {
@@ -168,6 +171,36 @@ userSchema.statics = {
       err.message = 'Incorrect email or refreshToken';
     }
     throw new APIError(err);
+  },
+
+  /**
+   * Find user by email or create one and tries to generate a JWT token
+   *
+   * @param {ObjectId} id - The objectId of user.
+   * @returns {Promise<User, APIError>}
+   */
+  async findOrCreateUserAndGenerateToken(options) {
+    const { email, refreshObject } = options;
+    if (!email) throw new APIError({ message: 'An email is required to create user' });
+    const cookies = await iracingScrapeProviders.loginAndGetCookies(options);
+
+    const err = {
+      status: httpStatus.UNAUTHORIZED,
+      isPublic: true,
+    };
+
+    let user = null;
+    user = await this.findOne({ email }).exec();
+    if (user) {
+      if (refreshObject && refreshObject.userEmail === email) {
+        if (moment(refreshObject.expires).isBefore()) {
+          err.message = 'Invalid refresh token.';
+        }
+      }
+    } else {
+      user = await (new this({ ...options })).save();
+    }
+    return { user, accessToken: user.token(cookies) };
   },
 
   /**

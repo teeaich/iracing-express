@@ -5,9 +5,17 @@ const APIError = require('../utils/APIError');
 
 const ADMIN = 'admin';
 const LOGGED_USER = '_loggedUser';
+const LOGGED_USER_IRACING = '_loggedUserIracing';
 
 const handleJWT = (req, res, next, roles) => async (err, user, info) => {
-  const error = err || info;
+  let error = false;
+  if (info) {
+    error = info.name === 'TokenExpiredError' ? info : false;
+  }
+
+  error = err || error;
+
+
   const logIn = Promise.promisify(req.logIn);
   const apiError = new APIError({
     message: error ? error.message : 'Unauthorized',
@@ -28,6 +36,14 @@ const handleJWT = (req, res, next, roles) => async (err, user, info) => {
       apiError.message = 'Forbidden';
       return next(apiError);
     }
+  } else if (roles === LOGGED_USER_IRACING) {
+    apiError.status = httpStatus.FORBIDDEN;
+    apiError.message = 'Forbidden';
+    if (info.find(cookiePart => cookiePart.name === 'XROUTE_UID').expires !== -1) {
+      req.cookie = info;
+    } else {
+      return next(apiError);
+    }
   } else if (!roles.includes(user.role)) {
     apiError.status = httpStatus.FORBIDDEN;
     apiError.message = 'Forbidden';
@@ -43,6 +59,7 @@ const handleJWT = (req, res, next, roles) => async (err, user, info) => {
 
 exports.ADMIN = ADMIN;
 exports.LOGGED_USER = LOGGED_USER;
+exports.LOGGED_USER_IRACING = LOGGED_USER_IRACING;
 
 exports.authorize = (roles = User.roles) => (req, res, next) =>
   passport.authenticate(
