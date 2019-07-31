@@ -40,6 +40,10 @@ const userSchema = new mongoose.Schema({
     trim: true,
   },
   cookies: mongoose.Schema.Types.Mixed,
+  js_custid: {
+    type: Number,
+    required: true,
+  },
   services: {
     facebook: String,
     google: String,
@@ -182,8 +186,15 @@ userSchema.statics = {
   async findOrCreateUserAndGenerateToken(options) {
     const { email, refreshObject } = options;
     if (!email) throw new APIError({ message: 'An email is required to create user' });
-    const cookies = await iracingScrapeProviders.loginAndGetCookies(options);
-
+    /* eslint-disable */
+    const { cookies, js_custid } = await iracingScrapeProviders.loginAndGetCookies(options);
+    // for testing
+    /* const cookies = [{
+      name: 'XROUTE_UID',
+      expires: 'asd',
+    }];
+    const js_custid = 11111; */
+    /* eslint-enable */
     const err = {
       status: httpStatus.UNAUTHORIZED,
       isPublic: true,
@@ -198,7 +209,7 @@ userSchema.statics = {
         }
       }
     } else {
-      user = await (new this({ ...options })).save();
+      user = await (new this({ ...options, js_custid })).save();
     }
     return { user, accessToken: user.token(cookies) };
   },
