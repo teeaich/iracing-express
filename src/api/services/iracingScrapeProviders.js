@@ -46,7 +46,7 @@ exports.loginAndGetCookies = async ({ email, password }) => {
     await browser.close();
     return {
       cookies,
-      js_custid,
+      js_custid: js_custid.js_custid,
     };
     /* eslint-enable */
   }
@@ -130,6 +130,7 @@ exports.getSessionData = async (cookies, {
   const practice = type === 'practice' ? 1 : 0;
   const race = type === 'race' ? 1 : 0;
   const url = `https://members.iracing.com/memberstats/member/GetResults?custid=${custid}&showraces=${race}&showquals=0&showtts=0&showops=${practice}&showofficial=1&showunofficial=0&showrookie=1&showclassd=1&showclassc=1&showclassb=1&showclassa=1&showpro=1&showprowc=1&lowerbound=0&upperbound=25&sort=start_time&order=desc&format=json&category%5B%5D=1&category%5B%5D=2&category%5B%5D=3&category%5B%5D=4&seasonyear=${year}&seasonquarter=${season}&raceweek=`;
+  console.log(url);
   const data = await axios.get(url, { headers });
   return data;
 };

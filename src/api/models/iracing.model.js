@@ -41,6 +41,10 @@ const iracingSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  jsCustid: {
+    type: String,
+    required: true,
+  },
 }, {
   timestamps: true,
 });

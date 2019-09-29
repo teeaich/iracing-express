@@ -25,6 +25,9 @@ exports.getData = async (req, res, next) => {
         CategoryListing,
         currentSeason,
         imageserver,
+        /* eslint-disable */
+        js_custid,
+        /* eslint-enable */
       } = await iracingScrapeProviders.getCoreData(req.cookie);
 
       const iracing = new IRacing({
@@ -36,6 +39,7 @@ exports.getData = async (req, res, next) => {
         CategoryListing,
         currentSeason,
         imageserver,
+        jsCustid: js_custid,
       });
       const savedIracing = await iracing.save();
       res.json(savedIracing);
